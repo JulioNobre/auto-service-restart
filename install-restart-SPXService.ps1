@@ -3,7 +3,7 @@
 
 # Configuration
 $taskFolder = '\Sisgarbe\'
-$taskName = 'Restart SPXService'
+$taskName = 'Reiniciar Shadow Protect às 13:45'
 $fullTaskName = "$taskFolder$taskName"
 $time = '13:45'
 $days = 'MON,TUE,WED,THU,FRI'
@@ -53,4 +53,4 @@ if ($proc.ExitCode -eq 0) {
 Write-Host "Detalhes da ação: $action" -ForegroundColor DarkGray
 
 # Example: To run the task immediately (optional)
-# schtasks /Run /TN "\Sisgarbe\Restart SPXService"
+# schtasks /Run /TN "\Sisgarbe\Reiniciar Shadow Protect às 13:45"
