@@ -36,7 +36,7 @@ A tarefa será criada em:
 Para verificar no Task Scheduler:
 
 ```powershell
-schtasks /Query /TN "\Sisgarbe\Reiniciar Shadow Protect às 13:45"
+schtasks /Query /TN "\Sisgarbe\Reiniciar Shadow Protect 13h45"
 ```
 
 ## 🧪 Testar manualmente
@@ -44,7 +44,7 @@ schtasks /Query /TN "\Sisgarbe\Reiniciar Shadow Protect às 13:45"
 Para executar a tarefa imediatamente (sem esperar pelo horário agendado):
 
 ```powershell
-schtasks /Run /TN "\Sisgarbe\Reiniciar Shadow Protect às 13:45"
+schtasks /Run /TN "\Sisgarbe\Reiniciar Shadow Protect 13h45"
 ```
 
 ## 🗑️ Remoção
@@ -52,7 +52,7 @@ schtasks /Run /TN "\Sisgarbe\Reiniciar Shadow Protect às 13:45"
 Para remover a tarefa agendada:
 
 ```powershell
-schtasks /Delete /TN "\Sisgarbe\Reiniciar Shadow Protect às 13:45" /F
+schtasks /Delete /TN "\Sisgarbe\Reiniciar Shadow Protect 13h45" /F
 ```
 
 ## ⚙️ Configuração
@@ -62,7 +62,7 @@ O script pode ser personalizado editando as variáveis no início do arquivo `in
 | Variável | Valor Atual | Descrição |
 |----------|-------------|-----------|
 | `$taskFolder` | `\Sisgarbe\` | Pasta no Task Scheduler |
-| `$taskName` | `Reiniciar Shadow Protect às 13:45` | Nome da tarefa |
+| `$taskName` | `Reiniciar Shadow Protect 13h45` | Nome da tarefa |
 | `$time` | `13:45` | Horário de execução |
 | `$days` | `MON,TUE,WED,THU,FRI` | Dias da semana (segunda a sexta) |
 | `$serviceName` | `SPXService` | Nome do serviço a reiniciar |

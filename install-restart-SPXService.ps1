@@ -3,7 +3,7 @@
 
 # Configuration
 $taskFolder = '\Sisgarbe\'
-$taskName = 'Reiniciar Shadow Protect às 13:45'
+$taskName = 'Reiniciar Shadow Protect 13h45'
 $fullTaskName = "$taskFolder$taskName"
 $time = '13:45'
 $days = 'MON,TUE,WED,THU,FRI'
@@ -25,24 +25,41 @@ if (-not $svc) {
     Write-Warning "Serviço '$serviceName' não encontrado no sistema. A tarefa ainda pode ser criada, mas a reinicialização falhará até o serviço existir."
 }
 
-# Build the action - use powershell.exe to run Restart-Service silently
-# Use single quotes inside the command to avoid escaping issues
-$action = "powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -Command `"Restart-Service -Name '$serviceName' -Force`""
-
-# Build command line with proper quoting for arguments with spaces
-$cmdLine = "/Create /TN `"$fullTaskName`" /TR `"$action`" /SC WEEKLY /D $days /ST $time /RU SYSTEM /RL HIGHEST /F"
-
 Write-Host "Criando/atualizando tarefa agendada: $fullTaskName" -ForegroundColor Cyan
-Write-Host "Comando: schtasks.exe $cmdLine" -ForegroundColor DarkGray
-$proc = Start-Process -FilePath schtasks.exe -ArgumentList $cmdLine -Wait -NoNewWindow -PassThru
-if ($proc.ExitCode -eq 0) {
-    Write-Host "Tarefa criada/atualizada com sucesso em $taskFolder" -ForegroundColor Green
-    Write-Host "Nome da tarefa: $taskName"
-} else {
-    Write-Error "Falha ao criar a tarefa. ExitCode: $($proc.ExitCode)"
+
+# Build the action using PowerShell cmdlets
+$actionCommand = "powershell.exe"
+$actionArgs = "-NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -Command `"Restart-Service -Name '$serviceName' -Force`""
+$action = New-ScheduledTaskAction -Execute $actionCommand -Argument $actionArgs
+
+# Create trigger for weekdays at specified time
+$trigger = New-ScheduledTaskTrigger -Weekly -DaysOfWeek Monday,Tuesday,Wednesday,Thursday,Friday -At $time
+
+# Create principal to run as SYSTEM with highest privileges
+$principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
+
+# Create settings
+$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable
+
+# Check if task already exists and unregister it
+$existingTask = Get-ScheduledTask -TaskPath $taskFolder -TaskName $taskName -ErrorAction SilentlyContinue
+if ($existingTask) {
+    Write-Host "Tarefa existente encontrada. Atualizando..." -ForegroundColor Yellow
+    Unregister-ScheduledTask -TaskPath $taskFolder -TaskName $taskName -Confirm:$false
 }
 
-Write-Host "Detalhes da ação: $action" -ForegroundColor DarkGray
+# Register the task
+try {
+    Register-ScheduledTask -TaskPath $taskFolder -TaskName $taskName -Action $action -Trigger $trigger -Principal $principal -Settings $settings -ErrorAction Stop | Out-Null
+    Write-Host "Tarefa criada/atualizada com sucesso em $taskFolder" -ForegroundColor Green
+    Write-Host "Nome da tarefa: $taskName" -ForegroundColor Green
+    Write-Host "Horário: $time (Segunda a Sexta)" -ForegroundColor Green
+} catch {
+    Write-Error "Falha ao criar a tarefa: $_"
+    Write-Host "Prima qualquer tecla para sair..." -ForegroundColor Yellow
+    $null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+    exit 1
+}
 
-# Example: To run the task immediately (optional)
-# schtasks /Run /TN "\Sisgarbe\Reiniciar Shadow Protect às 13:45"
+Write-Host "`nPrima qualquer tecla para sair..." -ForegroundColor Yellow
+$null = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
