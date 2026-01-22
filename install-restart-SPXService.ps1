@@ -28,21 +28,11 @@ if (-not $svc) {
 # Build the action - use powershell.exe to run Restart-Service silently
 $action = 'powershell.exe -NoProfile -WindowStyle Hidden -ExecutionPolicy Bypass -Command "Restart-Service -Name ''{0}'' -Force"' -f $serviceName
 
-# Use schtasks.exe via Start-Process with argument array to avoid quoting issues
-$arguments = @(
-    '/Create',
-    '/TN', $fullTaskName,
-    '/TR', $action,
-    '/SC', 'WEEKLY',
-    '/D', $days,
-    '/ST', $time,
-    '/RU', 'SYSTEM',
-    '/RL', 'HIGHEST',
-    '/F'
-)
+# Build command line with proper quoting for arguments with spaces
+$cmdLine = "/Create /TN `"$fullTaskName`" /TR `"$action`" /SC WEEKLY /D $days /ST $time /RU SYSTEM /RL HIGHEST /F"
 
 Write-Host "Criando/atualizando tarefa agendada: $fullTaskName" -ForegroundColor Cyan
-$proc = Start-Process -FilePath schtasks.exe -ArgumentList $arguments -Wait -NoNewWindow -PassThru
+$proc = Start-Process -FilePath schtasks.exe -ArgumentList $cmdLine -Wait -NoNewWindow -PassThru
 if ($proc.ExitCode -eq 0) {
     Write-Host "Tarefa criada/atualizada com sucesso em $taskFolder" -ForegroundColor Green
     Write-Host "Nome da tarefa: $taskName"
